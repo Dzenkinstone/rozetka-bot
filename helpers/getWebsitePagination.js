@@ -2,20 +2,18 @@ const getWebsitePagination = async (browser, page) => {
   try {
     const url = page.url();
     await page.goto(url);
-    await Promise.race([
-      page.waitForSelector(".pagination__list"),
-      page.waitForSelector(".product-about"),
-    ]);
 
-    const foundOneElement = await page.$$eval(".product-about", (div) =>
-      div.map((item) => item)
+    const findList = await page.evaluate(() =>
+      document.querySelector(".pagination__list")
+        ? Array.from(document.querySelector(".pagination")).map((item) => item)
+        : null
     );
 
-    if (foundOneElement[0]) {
-      return null;
+    if (!findList) {
+      return { message: "No pagination", url };
     }
 
-    console.log("asd");
+    await page.waitForSelector(".pagination");
 
     const findPaginationList = await page.$$eval(".pagination__list", (el) =>
       el.map((item) => item.textContent)
@@ -29,11 +27,11 @@ const getWebsitePagination = async (browser, page) => {
         url
           .split("&")
           .filter((item) => item.includes("page"))[0]
-          .split("page=")[1]
+          ?.split("page=")[1]
       ) || null;
 
     if (findPaginationList[0] && findLastPage === currentPage) {
-      return { lastPage: url };
+      return { url, message: "Last page" };
     }
 
     const findPaginationButton = await page.$$eval(
@@ -46,7 +44,7 @@ const getWebsitePagination = async (browser, page) => {
         return null;
       }
 
-      return findPaginationButton[0];
+      return { url: findPaginationButton[0] };
     }
 
     return null;

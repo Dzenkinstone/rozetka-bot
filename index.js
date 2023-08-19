@@ -32,20 +32,22 @@ bot.on(message("text"), async (ctx, value) => {
 
     await ctx.replyWithHTML("<b>Товари</b>", text);
 
-    if (data.pagination) {
-      const minimazedLength = decodeURI(data.pagination).includes(
+    console.log(data.pagination);
+
+    if (data.pagination.url && !data.pagination.message) {
+      const minimazedLength = decodeURI(data.pagination.url).includes(
         "wrong_phrase"
       )
-        ? decodeURI(data.pagination)
+        ? decodeURI(data.pagination.url)
             .split("&")
             .filter((item) => !item.includes("wrong_phrase"))
             .join("&")
             .split("/")
-            .slice(4, data.pagination.length - 1)
+            .slice(4, data.pagination.url.length - 1)
             .join("/")
-        : decodeURI(data.pagination)
+        : decodeURI(data.pagination.url)
             .split("/")
-            .slice(4, data.pagination.length - 1)
+            .slice(4, data.pagination.url.length - 1)
             .join("/");
 
       await ctx.reply(
@@ -67,6 +69,8 @@ bot.action(/.+/, async (ctx, next) => {
 
     const data = await getWebsiteData(null, requestUrl);
 
+    console.log(data.pagination.page);
+
     const result = data.title.map((item, idx) => {
       const currentLink = data.link[idx];
       return [Markup.button.url(item, currentLink)];
@@ -76,20 +80,20 @@ bot.action(/.+/, async (ctx, next) => {
 
     await ctx.replyWithHTML("<b>Товари</b>", text);
 
-    if (data.pagination && !data.pagination.lastPage) {
-      const minimazedLength = decodeURI(data.pagination).includes(
+    if (data.pagination.url && !data.pagination.message) {
+      const minimazedLength = decodeURI(data.pagination.url).includes(
         "wrong_phrase"
       )
-        ? decodeURI(data.pagination)
+        ? decodeURI(data.pagination.url)
             .split("&")
             .filter((item) => !item.includes("wrong_phrase"))
             .join("&")
             .split("/")
-            .slice(4, data.pagination.length - 1)
+            .slice(4, data.pagination.url.length - 1)
             .join("/")
-        : decodeURI(data.pagination)
+        : decodeURI(data.pagination.url)
             .split("/")
-            .slice(4, data.pagination.length - 1)
+            .slice(4, data.pagination.url.length - 1)
             .join("/");
 
       await ctx.reply(
