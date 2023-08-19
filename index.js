@@ -1,90 +1,23 @@
-const { Telegraf, Markup } = require("telegraf");
+const { Telegraf, Markup, Scenes, session } = require("telegraf");
 const { message } = require("telegraf/filters");
-const puppeteer = require("puppeteer");
+const getWebsiteData = require("./helpers/getWebsiteData");
+const getWebsiteInformation = require("./helpers/getWebsiteInformation");
+const getWebsitePagination = require("./helpers/getWebsitePagination");
 
 const bot = new Telegraf("6473151736:AAEMyONusbgBzMB6M8aZnU4APGGPqlxOu7c");
+const newPage = new Scenes.BaseScene("newPage");
 
-async function start(value) {
-  const browser = await puppeteer.launch({ headless: false });
-  const page = await browser.newPage();
-  await page.goto("https://rozetka.com.ua/");
+newPage.enter(async (ctx) => {});
 
-  await page.type(
-    '.search-form .search-form__inner .search-form__input-wrapper input[type="text"]',
-    value,
-    { delay: 100 }
-  );
+const stage = new Scenes.Stage([newPage]);
+bot.use(session());
+bot.use(stage.middleware());
 
-  await Promise.all([
-    page.click(".search-form__submit"),
-    page.waitForNavigation(),
-  ]);
-
-  await Promise.race([
-    page.waitForSelector(".catalog-empty"),
-    page.waitForSelector(".product-about"),
-    page.waitForSelector(".goods-tile"),
-  ]);
-
-  const notFound = await page.$$eval(".catalog-empty span", (div) =>
-    div.map((item) => item.textContent)
-  );
-
-  if (notFound[0]) {
-    await browser.close();
-    return false;
-  }
-
-  const foundOneElement = await page.$$eval(".product__heading h1", (div) =>
-    div.map((item) => item.textContent)
-  );
-
-  if (foundOneElement[0]) {
-    await browser.close();
-    return foundOneElement[0];
-  }
-
-  const informationAboutGoods = await page.evaluate(() => {
-    const getLink = Array.from(
-      document.querySelectorAll(".goods-tile__heading")
-    ).map((item) => item.href);
-
-    const getPrice = Array.from(
-      document.querySelectorAll(".goods-tile__price-value")
-    ).map((item) => item.textContent.trim());
-
-    const getTitle = Array.from(
-      document.querySelectorAll(".goods-tile__title")
-    ).map((item) => {
-      const splitTitle = item.textContent.trim().split(" ");
-
-      if (splitTitle.length < 7) {
-        return splitTitle.join(" ");
-      }
-
-      const setToMonimumLength = splitTitle.slice(0, 7).join(" ");
-      return setToMonimumLength;
-    });
-
-    return { link: getLink, price: getPrice, title: getTitle };
-  });
-
-  await browser.close();
-
-  return informationAboutGoods;
-}
-
-const pagination = async () => {
-  const browser = await puppeteer.launch({ headless: false });
-  const page = await browser.newPage();
-  await page.goto("https://rozetka.com.ua/");
-};
-
-bot.start((ctx) => ctx.reply("Welcome"));
 bot.help((ctx) => ctx.reply("Відправте повідомлення на сайт"));
-bot.on(message("text"), async (ctx) => {
+
+bot.on(message("text"), async (ctx, value) => {
   try {
-    const data = await start(ctx.update.message.text);
+    const data = await getWebsiteData(ctx.update.message.text);
 
     if (!data) {
       return ctx.reply("За заданими параметрами не знайдено жодної моделі");
@@ -99,16 +32,76 @@ bot.on(message("text"), async (ctx) => {
 
     await ctx.replyWithHTML("<b>Товари</b>", text);
 
-    await ctx.reply(
-      "Подивитися ще",
-      Markup.inlineKeyboard([[Markup.button.callback("⬇️", "button_1")]])
-    );
+    if (data.pagination) {
+      const minimazedLength = decodeURI(data.pagination).includes(
+        "wrong_phrase"
+      )
+        ? decodeURI(data.pagination)
+            .split("&")
+            .filter((item) => !item.includes("wrong_phrase"))
+            .join("&")
+            .split("/")
+            .slice(4, data.pagination.length - 1)
+            .join("/")
+        : decodeURI(data.pagination)
+            .split("/")
+            .slice(4, data.pagination.length - 1)
+            .join("/");
+
+      await ctx.reply(
+        "Подивитися ще",
+        Markup.inlineKeyboard([[Markup.button.callback("⬇️", minimazedLength)]])
+      );
+    }
   } catch (error) {
-    console.log(error.message);
+    console.log("catalogue", error);
   }
 });
 
-bot.hears("photo", (ctx) => ctx.reply());
+bot.action(/.+/, async (ctx, next) => {
+  try {
+    const requestUrl =
+      ctx.update.callback_query.data.split("//")[0] === "https:"
+        ? ctx.update.callback_query.data
+        : `https://rozetka.com.ua/ua/${ctx.update.callback_query.data}`;
+
+    const data = await getWebsiteData(null, requestUrl);
+
+    const result = data.title.map((item, idx) => {
+      const currentLink = data.link[idx];
+      return [Markup.button.url(item, currentLink)];
+    });
+
+    const text = Markup.inlineKeyboard(result);
+
+    await ctx.replyWithHTML("<b>Товари</b>", text);
+
+    if (data.pagination && !data.pagination.lastPage) {
+      const minimazedLength = decodeURI(data.pagination).includes(
+        "wrong_phrase"
+      )
+        ? decodeURI(data.pagination)
+            .split("&")
+            .filter((item) => !item.includes("wrong_phrase"))
+            .join("&")
+            .split("/")
+            .slice(4, data.pagination.length - 1)
+            .join("/")
+        : decodeURI(data.pagination)
+            .split("/")
+            .slice(4, data.pagination.length - 1)
+            .join("/");
+
+      await ctx.reply(
+        "Подивитися ще",
+        Markup.inlineKeyboard([[Markup.button.callback("⬇️", minimazedLength)]])
+      );
+    }
+  } catch (error) {
+    console.log("action", error);
+  }
+});
+
 bot.launch();
 
 // Enable graceful stop
