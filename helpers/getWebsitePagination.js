@@ -3,14 +3,12 @@ const getWebsitePagination = async (browser, page) => {
     const url = page.url();
     await page.goto(url);
 
-    const findList = await page.evaluate(() =>
-      document.querySelector(".pagination__list")
-        ? Array.from(document.querySelector(".pagination")).map((item) => item)
-        : null
-    );
+    await page.waitForTimeout(100);
 
-    if (!findList) {
-      return { message: "No pagination", url };
+    const pagination = await page.$(".pagination");
+
+    if (!pagination) {
+      return { url, message: "No pagination" };
     }
 
     await page.waitForSelector(".pagination");

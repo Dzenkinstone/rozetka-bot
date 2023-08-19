@@ -17,6 +17,8 @@ bot.help((ctx) => ctx.reply("Відправте повідомлення на с
 
 bot.on(message("text"), async (ctx, value) => {
   try {
+    ctx.reply(`Шукаємо товар під назвою "${ctx.update.message.text}"...`);
+
     const data = await getWebsiteData(ctx.update.message.text);
 
     if (!data) {
@@ -31,8 +33,6 @@ bot.on(message("text"), async (ctx, value) => {
     const text = Markup.inlineKeyboard(result);
 
     await ctx.replyWithHTML("<b>Товари</b>", text);
-
-    console.log(data.pagination);
 
     if (data.pagination.url && !data.pagination.message) {
       const minimazedLength = decodeURI(data.pagination.url).includes(
@@ -50,11 +50,13 @@ bot.on(message("text"), async (ctx, value) => {
             .slice(4, data.pagination.url.length - 1)
             .join("/");
 
-      await ctx.reply(
+      return await ctx.reply(
         "Подивитися ще",
         Markup.inlineKeyboard([[Markup.button.callback("⬇️", minimazedLength)]])
       );
     }
+
+    ctx.reply(`Інших сторінок не знайдено`);
   } catch (error) {
     console.log("catalogue", error);
   }
@@ -68,8 +70,6 @@ bot.action(/.+/, async (ctx, next) => {
         : `https://rozetka.com.ua/ua/${ctx.update.callback_query.data}`;
 
     const data = await getWebsiteData(null, requestUrl);
-
-    console.log(data.pagination.page);
 
     const result = data.title.map((item, idx) => {
       const currentLink = data.link[idx];
