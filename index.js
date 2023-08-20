@@ -1,11 +1,7 @@
-const { Telegraf, Markup, Scenes, session } = require("telegraf");
+const { Telegraf, Markup } = require("telegraf");
 const { message } = require("telegraf/filters");
 const getWebsiteData = require("./helpers/getWebsiteData");
-require("dotenv").config();
-
-const { BOT_TOKEN } = process.env;
-
-const bot = new Telegraf(BOT_TOKEN);
+const bot = new Telegraf("6473151736:AAEMyONusbgBzMB6M8aZnU4APGGPqlxOu7c");
 
 bot.help((ctx) => ctx.reply("Відправте повідомлення на сайт"));
 
