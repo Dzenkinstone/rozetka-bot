@@ -1,7 +1,7 @@
 const { Telegraf, Markup } = require("telegraf");
 const { message } = require("telegraf/filters");
 const getWebsiteData = require("./helpers/getWebsiteData");
-const bot = new Telegraf("6473151736:AAEMyONusbgBzMB6M8aZnU4APGGPqlxOu7c");
+const bot = new Telegraf(process.env.BOT_TOKEN);
 
 bot.help((ctx) => ctx.reply("Відправте повідомлення на сайт"));
 
