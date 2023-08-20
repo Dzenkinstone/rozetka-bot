@@ -5,10 +5,16 @@ const getWebsiteData = async (value, url = "https://rozetka.com.ua/") => {
   try {
     const browser = await puppeteer.launch({
       headless: false,
-      ignoreDefaultArgs: ["--disable-extensions"],
-      args: ["--no-sandbox", "--disabled-setupid-sandbox"],
+      args: [
+        "--no-sandbox",
+        "--disabled-setupid-sandbox",
+        "--single-process",
+        "--no-zygote",
+      ],
       executablePath:
-        "node_modules@puppeteer\browserssrc\browser-datachrome.ts",
+        process.env.NODE_ENV === "production"
+          ? process.env.PUPPETEER_EXECUTABLE_PATH
+          : puppeteer.executablePath(),
     });
     const page = await browser.newPage();
     await page.goto(url);
