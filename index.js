@@ -3,14 +3,9 @@ const { message } = require("telegraf/filters");
 const getWebsiteData = require("./helpers/getWebsiteData");
 require("dotenv").config();
 
-const bot = new Telegraf(process.env.BOT_TOKEN);
-const newPage = new Scenes.BaseScene("newPage");
+const { BOT_TOKEN } = process.env;
 
-newPage.enter(async (ctx) => {});
-
-const stage = new Scenes.Stage([newPage]);
-bot.use(session());
-bot.use(stage.middleware());
+const bot = new Telegraf(BOT_TOKEN);
 
 bot.help((ctx) => ctx.reply("Відправте повідомлення на сайт"));
 
