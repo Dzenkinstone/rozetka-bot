@@ -1,6 +1,5 @@
 const { default: puppeteer } = require("puppeteer");
 const getWebsiteInformation = require("./getWebsiteInformation");
-const getWebsitePagination = require("./getWebsitePagination");
 
 const getWebsiteData = async (value, url = "https://rozetka.com.ua/") => {
   try {

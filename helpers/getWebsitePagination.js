@@ -3,7 +3,7 @@ const getWebsitePagination = async (browser, page) => {
     const url = page.url();
     await page.goto(url);
 
-    await page.waitForTimeout(100);
+    await page.waitForTimeout(500);
 
     const pagination = await page.$(".pagination");
 
