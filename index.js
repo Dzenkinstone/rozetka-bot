@@ -5,8 +5,6 @@ const cors = require("cors");
 const getWebsiteData = require("./helpers/getWebsiteData");
 require("dotenv").config();
 
-console.log("asd");
-
 const bot = new Telegraf(process.env.BOT_TOKEN);
 const app = express();
 
