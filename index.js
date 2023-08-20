@@ -1,10 +1,9 @@
 const { Telegraf, Markup, Scenes, session } = require("telegraf");
 const { message } = require("telegraf/filters");
 const getWebsiteData = require("./helpers/getWebsiteData");
-const getWebsiteInformation = require("./helpers/getWebsiteInformation");
-const getWebsitePagination = require("./helpers/getWebsitePagination");
+require("dotenv").config();
 
-const bot = new Telegraf("6473151736:AAEMyONusbgBzMB6M8aZnU4APGGPqlxOu7c");
+const bot = new Telegraf(process.env.BOT_TOKEN);
 const newPage = new Scenes.BaseScene("newPage");
 
 newPage.enter(async (ctx) => {});
