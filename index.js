@@ -1,23 +1,18 @@
 const { Telegraf, Markup } = require("telegraf");
 const { message } = require("telegraf/filters");
-const express = require("express");
-const cors = require("cors");
 const getWebsiteData = require("./helpers/getWebsiteData");
 require("dotenv").config();
 
 const bot = new Telegraf(process.env.BOT_TOKEN);
-const app = express();
-
-app.use(express.json());
-app.use(cors());
 
 bot.help((ctx) => ctx.reply("Відправте повідомлення на сайт"));
 
 bot.on(message("text"), async (ctx, value) => {
   try {
-    ctx.reply(`Шукаємо товар під назвою "${ctx.update.message.text}"...`);
+    const userText = ctx.update.message.text;
+    ctx.reply(`Шукаємо товар під назвою "${userText}"...`);
 
-    const data = await getWebsiteData(ctx.update.message.text);
+    const data = await getWebsiteData(userText);
 
     if (!data) {
       return ctx.reply("За заданими параметрами не знайдено жодної моделі");
@@ -109,7 +104,3 @@ bot.launch();
 // Enable graceful stop
 process.once("SIGINT", () => bot.stop("SIGINT"));
 process.once("SIGTERM", () => bot.stop("SIGTERM"));
-
-app.listen(process.env.PORT, () =>
-  console.log(`Server is running on port ${process.env.PORT}`)
-);
